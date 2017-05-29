@@ -233,7 +233,7 @@ def run():
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05
     #   n_test     - discrete number of testing trials to perform, default is 0
     #
-    sim.run(n_test=10)                    # for linear decay function - 0.05 ; F, F
+    # sim.run(n_test=10)                    # for linear decay function - 0.05 ; F, F
     # sim.run(n_test=10)                    # for linear decay function - 0.05 alpha - 0.3; F, F
     # sim.run(n_test=20, tolerance=0.36)      # for 1/(t*t) decay function
     # sim.run(n_test=20, tolerance=0.000026)  # for a ** t decay function - a = 0.9, ; A+, F
@@ -243,7 +243,7 @@ def run():
     # sim.run(n_test=20)                    # for linear decay function - 0.005, alpha = 0.3 ; A+, A
     # sim.run(n_test=20)                    # for linear decay function - 0.004 ; alpha = 0.5 A+; A
     # sim.run(n_test=20)                    # for linear decay function - 0.004 ; alpha = 0.3 A+; B
-    # sim.run(n_test=20)                    # for linear decay function - 0.003 ; alpha = 0.3 A+; A
+    sim.run(n_test=20)                    # for linear decay function - 0.003 ; alpha = 0.3 A+; A
 
 if __name__ == '__main__':
     run()
