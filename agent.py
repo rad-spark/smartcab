@@ -49,15 +49,19 @@ class LearningAgent(Agent):
                 self.first_run = False
                 self.trial     = 1
             else:
-                self.trial += 1
-                self.epsilon = self.epsilon - 0.05    # Decay epsilon linearly
+                self.epsilon = self.epsilon - 0.003    # Decay epsilon linearly
+
+                # Other epsilon decay functions used for experimentation
+
+                # self.epsilon = self.epsilon - 0.05    # Decay epsilon linearly
                 # self.epsilon = self.epsilon - 0.005    # Decay epsilon linearly
                 # self.epsilon = self.epsilon - 0.004    # Decay epsilon linearly
-                # self.epsilon = self.epsilon - 0.003    # Decay epsilon linearly
+                # self.trial += 1
                 # Decay function : epsilon =  (1 / (t * t)) ; t = trial number
                 # self.epsilon = 1.0 / ( self.trial * self.trial)
                 # Decay function : epsilon = a ** (t); a = 0.99
                 # self.epsilon =  (0.99) **  self.trial
+
             if self.epsilon < 0:
                 self.epsilon = 0
 
@@ -94,11 +98,7 @@ class LearningAgent(Agent):
         ###########
         # Calculate the maximum Q-value of all actions for a given state
 
-        maxQ = None
-        Q_values = self.Q[state]
-        for v in Q_values.itervalues():
-            if v > maxQ:
-                maxQ = v
+        maxQ = max(self.Q[state].values())
 
         return maxQ
 
@@ -139,23 +139,28 @@ class LearningAgent(Agent):
 
         # move this len(self.valid_actions) to __init__
         if not self.learning:
-            random_action = random.randint(1, len(self.valid_actions))
-            action = self.valid_actions[random_action - 1]
+            action = random.choice(self.valid_actions)
         else:
             # Take random action with epsilon probability
             prob = np.random.choice(2, 1, p=[self.epsilon, 1 - self.epsilon])
             if prob == 0:
+                action = random.choice(self.valid_actions)
                 random_action = random.randint(1, len(self.valid_actions))
                 action = self.valid_actions[random_action - 1]
             else:
                 Q_values = self.Q[state]
-                temp_action = None
-                max_q_value = None
-                for k, v in Q_values.iteritems():
-                    if v > max_q_value:
-                        temp_action = k
-                        max_q_value = v
-                action = temp_action
+                max_q_value = max(Q_values.values())
+                max_q_list = [(k,v) for k,v in Q_values.iteritems()
+                                if v == max_q_value]
+                # if there are multiple q values with the same max value
+                # then pick an action amongst the multiple max Q values
+                # randomly
+                action = random.choice(max_q_list)[0]
+
+                # Old code - remove after testing the list comprehension
+                # for k, v in Q_values.iteritems():
+                #   if v == max_q_value:
+                #       max_q_list.append((k,v))
 
         return action
 
@@ -171,8 +176,7 @@ class LearningAgent(Agent):
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
         if self.learning:
-            # self.Q[state][action] = (self.Q[state][action] + reward) / 2
-            self.Q[state][action] = self.Q[state][action] + reward * self.alpha
+            self.Q[state][action] = self.Q[state][action] + self.alpha * (reward - self.Q[state][action])
 
         return
 
@@ -210,6 +214,7 @@ def run():
     #    * epsilon - continuous value for the exploration factor, default is 1
     #    * alpha   - continuous value for the learning rate, default is 0.5
     agent = env.create_agent(LearningAgent, learning=True, alpha=0.5)
+    # agent = env.create_agent(LearningAgent)
 
     ##############
     # Follow the driving agent
@@ -224,8 +229,8 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    # sim = Simulator(env, update_delay=0.01, display=True, log_metrics=True, optimized=True)
-    sim = Simulator(env, update_delay=0.01, display=True, log_metrics=True)
+    sim = Simulator(env, update_delay=0.01, display=True, log_metrics=True, optimized=True)
+    # sim = Simulator(env, update_delay=0.01, display=True, log_metrics=True)
 
     ##############
     # Run the simulator
@@ -233,7 +238,7 @@ def run():
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05
     #   n_test     - discrete number of testing trials to perform, default is 0
     #
-    # sim.run(n_test=10)                    # for linear decay function - 0.05 ; F, F
+    sim.run(n_test=10)                    # for linear decay function - 0.05 ; F, F
     # sim.run(n_test=10)                    # for linear decay function - 0.05 alpha - 0.3; F, F
     # sim.run(n_test=20, tolerance=0.36)      # for 1/(t*t) decay function
     # sim.run(n_test=20, tolerance=0.000026)  # for a ** t decay function - a = 0.9, ; A+, F
@@ -243,7 +248,7 @@ def run():
     # sim.run(n_test=20)                    # for linear decay function - 0.005, alpha = 0.3 ; A+, A
     # sim.run(n_test=20)                    # for linear decay function - 0.004 ; alpha = 0.5 A+; A
     # sim.run(n_test=20)                    # for linear decay function - 0.004 ; alpha = 0.3 A+; B
-    sim.run(n_test=20)                    # for linear decay function - 0.003 ; alpha = 0.3 A+; A
+    # sim.run(n_test=20)                    # for linear decay function - 0.003 ; alpha = 0.5 ; A+; A
 
 if __name__ == '__main__':
     run()
