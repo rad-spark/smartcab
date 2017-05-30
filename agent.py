@@ -49,10 +49,12 @@ class LearningAgent(Agent):
                 self.first_run = False
                 self.trial     = 1
             else:
-                self.epsilon = self.epsilon - 0.003    # Decay epsilon linearly
+
+                self.epsilon = self.epsilon - 0.0025    # Decay epsilon linearly
 
                 # Other epsilon decay functions used for experimentation
 
+                # self.epsilon = self.epsilon - 0.003    # Decay epsilon linearly
                 # self.epsilon = self.epsilon - 0.05    # Decay epsilon linearly
                 # self.epsilon = self.epsilon - 0.005    # Decay epsilon linearly
                 # self.epsilon = self.epsilon - 0.004    # Decay epsilon linearly
@@ -112,7 +114,7 @@ class LearningAgent(Agent):
         # When learning, check if the 'state' is not in the Q-table
         # If it is not, create a new dictionary for that state
         #   Then, for each action available, set the initial Q-value to 0.0
-        if not state in self.Q:
+        if self.learning and (not state in self.Q):
             Q_values = dict()
             for va in self.valid_actions:
                 Q_values[va] = 0
@@ -145,22 +147,12 @@ class LearningAgent(Agent):
             prob = np.random.choice(2, 1, p=[self.epsilon, 1 - self.epsilon])
             if prob == 0:
                 action = random.choice(self.valid_actions)
-                random_action = random.randint(1, len(self.valid_actions))
-                action = self.valid_actions[random_action - 1]
             else:
-                Q_values = self.Q[state]
-                max_q_value = max(Q_values.values())
-                max_q_list = [(k,v) for k,v in Q_values.iteritems()
-                                if v == max_q_value]
                 # if there are multiple q values with the same max value
                 # then pick an action amongst the multiple max Q values
                 # randomly
-                action = random.choice(max_q_list)[0]
-
-                # Old code - remove after testing the list comprehension
-                # for k, v in Q_values.iteritems():
-                #   if v == max_q_value:
-                #       max_q_list.append((k,v))
+                action = random.choice([action for action in self.valid_actions
+                               if  self.Q[state][action] == self.get_maxQ(state)])
 
         return action
 
@@ -176,7 +168,7 @@ class LearningAgent(Agent):
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
         if self.learning:
-            self.Q[state][action] = self.Q[state][action] + self.alpha * (reward - self.Q[state][action])
+            self.Q[state][action] += self.alpha * (reward - self.Q[state][action])
 
         return
 
@@ -238,7 +230,7 @@ def run():
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05
     #   n_test     - discrete number of testing trials to perform, default is 0
     #
-    sim.run(n_test=10)                    # for linear decay function - 0.05 ; F, F
+    # sim.run(n_test=10)                    # for linear decay function - 0.05 ; F, F
     # sim.run(n_test=10)                    # for linear decay function - 0.05 alpha - 0.3; F, F
     # sim.run(n_test=20, tolerance=0.36)      # for 1/(t*t) decay function
     # sim.run(n_test=20, tolerance=0.000026)  # for a ** t decay function - a = 0.9, ; A+, F
@@ -249,6 +241,7 @@ def run():
     # sim.run(n_test=20)                    # for linear decay function - 0.004 ; alpha = 0.5 A+; A
     # sim.run(n_test=20)                    # for linear decay function - 0.004 ; alpha = 0.3 A+; B
     # sim.run(n_test=20)                    # for linear decay function - 0.003 ; alpha = 0.5 ; A+; A
+    sim.run(n_test=100)                    # for linear decay function - 0.0025 ; alpha = 0.5 ; A+; A
 
 if __name__ == '__main__':
     run()
